@@ -17,7 +17,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     label: '本店铺',
                     data: [],  // 初始为空，将通过动画填充
                     borderColor: 'rgba(255, 159, 64, 1)',
-                    backgroundColor: 'rgba(255, 159, 64, 0.2)',
+                    backgroundColor: 'rgba(255, 159, 64, 0.3)',
                     borderWidth: 3,
                     tension: 0.3, // 降低平滑度，增加波动感
                     pointRadius: 4,
@@ -27,7 +27,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     label: '商圈同行均值',
                     data: [],  // 初始为空，将通过动画填充
                     borderColor: 'rgba(255, 99, 132, 1)',
-                    backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                    backgroundColor: 'rgba(255, 99, 132, 0.3)',
                     borderWidth: 3,
                     tension: 0.4,
                     pointRadius: 4,
@@ -236,7 +236,7 @@ function highlightComparison(chart) {
         xMax: chart.data.labels.length - 1,
         yMin: storeAvg,
         yMax: industryAvg,
-        backgroundColor: 'rgba(255, 99, 132, 0.1)',
+        backgroundColor: 'rgba(255, 99, 132, 0.2)',
         borderColor: 'rgba(255, 99, 132, 0.2)',
         borderWidth: 0,
         label: {

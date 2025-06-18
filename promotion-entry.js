@@ -1,37 +1,106 @@
-document.addEventListener('DOMContentLoaded', function() {
-    // 生成30天的日期标签
+// 生成日期数据 - 近30天
+function generateDates(days) {
+    const dates = [];
+    const today = new Date();
+    
+    for (let i = days - 1; i >= 0; i--) {
+        const date = new Date();
+        date.setDate(today.getDate() - i);
+        const month = date.getMonth() + 1;
+        const day = date.getDate();
+        dates.push(`${month}月${day}日`);
+    }
+    
+    return dates;
+}
+
+// 生成店铺进店率数据 - 范围在6.5%-7.2%之间小幅波动
+function generateStoreEntryRates() {
+    const data = [];
+    const baseValue = 6.8; // 基础进店率为6.8%
+    let lastValue = baseValue;
+    
+    // 平滑连贯的波动
+    for (let i = 0; i < 30; i++) {
+        // 产生围绕基准值的适中波动
+        // 使用上一个点的值作为参考，确保曲线平滑
+        const randomVariation = (Math.random() * 0.3 - 0.15); // 适中的波动
+        lastValue = lastValue + randomVariation;
+        
+        // 防止偏离基准值太远
+        if (lastValue > baseValue + 0.4) {
+            lastValue = baseValue + 0.4 - (Math.random() * 0.1);
+        } else if (lastValue < baseValue - 0.3) {
+            lastValue = baseValue - 0.3 + (Math.random() * 0.1);
+        }
+        
+        data.push(parseFloat(lastValue.toFixed(1)));
+    }
+    
+    return data;
+}
+
+// 生成行业平均进店率数据 - 范围在4.8%-5.2%之间小幅波动
+function generateIndustryEntryRates() {
+    const data = [];
+    const baseValue = 5.0; // 基础行业进店率为5.0%
+    let lastValue = baseValue;
+    
+    for (let i = 0; i < 30; i++) {
+        // 使用正弦函数生成更平滑的波动，加上更小的随机因素
+        const randomVariation = (Math.random() * 0.2 - 0.1);
+        lastValue = lastValue + randomVariation;
+        
+        // 确保在合理范围内
+        if (lastValue > baseValue + 0.2) {
+            lastValue = baseValue + 0.2 - (Math.random() * 0.05);
+        } else if (lastValue < baseValue - 0.2) {
+            lastValue = baseValue - 0.2 + (Math.random() * 0.05);
+        }
+        
+        data.push(parseFloat(lastValue.toFixed(1)));
+    }
+    
+    return data;
+}
+
+// 初始化图表
+function initChart() {
     const dates = generateDates(30);
+    const storeData = generateStoreEntryRates();
+    const industryData = generateIndustryEntryRates();
     
-    // 生成模拟数据
-    const industryData = generateIndustryData();
-    const storeData = generateStoreData();
+    // 获取Canvas元素
+    const ctx = document.getElementById('entryRateChart').getContext('2d');
     
-    // 图表配置
-    const ctx = document.getElementById('conversionChart').getContext('2d');
+    // 计算行业均值横线
+    const industryAverage = industryData.reduce((sum, value) => sum + value, 0) / industryData.length;
+    
+    // 创建图表
     const chart = new Chart(ctx, {
         type: 'line',
         data: {
             labels: dates,
             datasets: [
                 {
-                    label: '本店铺',
+                    label: '本店铺进店率',
                     data: [],  // 初始为空，将通过动画填充
-                    borderColor: 'rgba(53, 162, 235, 1)',
-                    backgroundColor: 'rgba(53, 162, 235, 0.3)',
+                    borderColor: 'rgba(46, 134, 193, 1)',
+                    backgroundColor: 'rgba(46, 134, 193, 0.3)',
                     borderWidth: 3,
                     tension: 0.4, // 增加平滑度
                     pointRadius: 4,
-                    pointBackgroundColor: 'rgba(53, 162, 235, 1)',
+                    pointBackgroundColor: 'rgba(46, 134, 193, 1)',
                 },
                 {
                     label: '商圈同行均值',
                     data: [],  // 初始为空，将通过动画填充
-                    borderColor: 'rgba(255, 99, 132, 1)',
-                    backgroundColor: 'rgba(255, 99, 132, 0.3)',
+                    borderColor: 'rgba(192, 57, 43, 1)',
+                    backgroundColor: 'rgba(192, 57, 43, 0.3)',
                     borderWidth: 3,
                     tension: 0.4, // 增加平滑度
                     pointRadius: 4,
-                    pointBackgroundColor: 'rgba(255, 99, 132, 1)',
+                    pointBackgroundColor: 'rgba(192, 57, 43, 1)',
                 }
             ]
         },
@@ -47,7 +116,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     intersect: false,
                     callbacks: {
                         label: function(context) {
-                            return context.dataset.label + ': ' + context.raw.toFixed(2) + '%';
+                            return context.dataset.label + ': ' + context.raw.toFixed(1) + '%';
                         }
                     }
                 },
@@ -58,21 +127,22 @@ document.addEventListener('DOMContentLoaded', function() {
                     annotations: {
                         line1: {
                             type: 'line',
-                            yMin: 20,
-                            yMax: 20,
-                            borderColor: 'rgba(255, 99, 132, 0.5)',
+                            yMin: 5.0,
+                            yMax: 5.0,
+                            borderColor: 'rgba(192, 57, 43, 0.5)',
                             borderWidth: 2,
                             borderDash: [6, 6],
                             label: {
                                 enabled: true,
-                                content: '行业均值 20%',
+                                content: '行业均值 5.0%',
                                 position: 'start',
-                                backgroundColor: 'rgba(255, 99, 132, 0.8)',
+                                backgroundColor: 'rgba(192, 57, 43, 0.8)',
                             }
                         },
                     }
                 }
-            },            scales: {
+            },
+            scales: {
                 x: {
                     grid: {
                         display: false
@@ -96,17 +166,18 @@ document.addEventListener('DOMContentLoaded', function() {
                 },
                 y: {
                     beginAtZero: false,
-                    min: 15,
-                    max: 35,
+                    min: 3,
+                    max: 8,
                     title: {
                         display: true,
-                        text: '下单转化率 (%)',
+                        text: '进店率 (%)',
                         font: {
                             size: 14,
                             weight: 'bold'
                         }
                     },
                     ticks: {
+                        stepSize: 1, // 设置刻度间距为1%
                         callback: function(value) {
                             return value + '%';
                         }
@@ -126,71 +197,6 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // 执行动画展示数据
     animateChart(chart, industryData, storeData);
-});
-// 生成过去30天的日期
-function generateDates(days) {
-    const dates = [];
-    const today = new Date();
-    
-    for (let i = days - 1; i >= 0; i--) {
-        const date = new Date();
-        date.setDate(today.getDate() - i);
-        const month = date.getMonth() + 1;
-        const day = date.getDate();
-        dates.push(`${month}月${day}日`);
-    }
-    
-    return dates;
-}
-
-// 生成行业平均数据 - 围绕20%波动
-function generateIndustryData() {
-    const data = [];
-    const baseValue = 20;
-    let lastValue = baseValue;
-    
-    // 平滑连贯的波动
-    for (let i = 0; i < 30; i++) {
-        // 产生围绕基准值的适中波动，范围±2%
-        // 使用上一个点的值作为参考，确保曲线平滑
-        const randomVariation = (Math.random() * 1.0 - 0.5); // 适中的波动
-        lastValue = lastValue + randomVariation;
-        
-        // 防止偏离基准值太远
-        if (lastValue > baseValue + 2.0) {
-            lastValue = baseValue + 2.0 - (Math.random() * 0.6);
-        } else if (lastValue < baseValue - 2.0) {
-            lastValue = baseValue - 2.0 + (Math.random() * 0.6);
-        }
-        
-        data.push(lastValue);
-    }
-    
-    return data;
-}// 生成店铺数据 - 围绕27.5%波动 (25-30%范围)
-function generateStoreData() {
-    const data = [];
-    const baseValue = 27.5;
-    let lastValue = baseValue;
-    
-    // 平滑连贯的波动
-    for (let i = 0; i < 30; i++) {
-        // 产生围绕基准值的适中波动
-        // 使用上一个点的值作为参考，确保曲线平滑
-        const randomVariation = (Math.random() * 1.2 - 0.6); // 适中的波动
-        lastValue = lastValue + randomVariation;
-        
-        // 防止偏离基准值太远
-        if (lastValue > baseValue + 2.5) {
-            lastValue = baseValue + 2.5 - (Math.random() * 0.8);
-        } else if (lastValue < baseValue - 2.5) {
-            lastValue = baseValue - 2.5 + (Math.random() * 0.8);
-        }
-        
-        data.push(lastValue);
-    }
-    
-    return data;
 }
 
 // 动画展示数据
@@ -218,7 +224,22 @@ function animateChart(chart, industryData, storeData) {
     
     // 开始添加数据
     setTimeout(addData, 500);
-}// 添加对比高亮指示
+    
+    // 文字分析部分的渐入动画
+    const analysisItems = document.querySelectorAll('.analysis p');
+    analysisItems.forEach((item, index) => {
+        item.style.opacity = 0;
+        item.style.transform = 'translateY(20px)';
+        item.style.transition = 'opacity 0.8s ease, transform 0.8s ease';
+        
+        setTimeout(() => {
+            item.style.opacity = 1;
+            item.style.transform = 'translateY(0)';
+        }, 5000 + index * 400); // 在图表动画接近完成后逐条显示
+    });
+}
+
+// 添加对比高亮指示
 function highlightComparison(chart) {
     // 计算平均值
     const storeAvg = calculateAverage(chart.data.datasets[0].data);
@@ -231,14 +252,14 @@ function highlightComparison(chart) {
         xMax: chart.data.labels.length - 1,
         yMin: industryAvg,
         yMax: storeAvg,
-        backgroundColor: 'rgba(75, 192, 192, 0.2)',
-        borderColor: 'rgba(75, 192, 192, 0.2)',
+        backgroundColor: 'rgba(46, 134, 193, 0.2)',
+        borderColor: 'rgba(46, 134, 193, 0.2)',
         borderWidth: 0,
         label: {
             display: true,
             content: '优势区间',
             position: 'center',
-            color: 'rgba(75, 192, 192, 0.8)',
+            color: 'rgba(46, 134, 193, 0.8)',
             font: {
                 weight: 'bold'
             }
@@ -250,14 +271,14 @@ function highlightComparison(chart) {
         type: 'line',
         yMin: storeAvg,
         yMax: storeAvg,
-        borderColor: 'rgba(53, 162, 235, 0.5)',
+        borderColor: 'rgba(46, 134, 193, 0.5)',
         borderWidth: 2,
         borderDash: [6, 6],
         label: {
             enabled: true,
-            content: '本店均值 ' + storeAvg.toFixed(2) + '%',
+            content: '本店均值 ' + storeAvg.toFixed(1) + '%',
             position: 'end',
-            backgroundColor: 'rgba(53, 162, 235, 0.8)',
+            backgroundColor: 'rgba(46, 134, 193, 0.8)',
         }
     };
     
@@ -270,3 +291,6 @@ function calculateAverage(data) {
     const sum = data.reduce((a, b) => a + b, 0);
     return sum / data.length;
 }
+
+// 页面加载完成后初始化图表
+document.addEventListener('DOMContentLoaded', initChart); 
